@@ -40,7 +40,7 @@ function ConfirmRide(props) {
           <p className="text-sm text-gray-600">Affordable, Cheap</p>
         </div>
       </div>
-      <button onClick={() => { props.setWaitingForRide(true); props.setConfirmRide(false); props.createRide() }} className='bg-green-500 text-white p-2 rounded-md mt-2 w-full'>Confirm Ride</button>
+      <button onClick={() =>  {props.createRide(); props.setConfirmRide(false); props.setVehiclePanel(false); props.setWaitingForRide(true); } } className='bg-green-500 text-white p-2 rounded-md mt-2 w-full'>Confirm Ride</button>
     </div>
   )
 }

@@ -9,6 +9,7 @@ function ConfirmRidePopup(props) {
 
     const submitHander = (e) => {
         e.preventDefault()
+        props.startRideHandler(otp)
     }
 
     return (
@@ -20,7 +21,7 @@ function ConfirmRidePopup(props) {
                 <div className="profile w-2/3 flex flex-row items-center gap-2 px-2">
                     <img className='w-14 h-14 rounded-full object-cover' src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRly7XndllZIqMpisn8XLQA0d1EK37LjoYdVA&s" alt="" />
                     <div className="name flex flex-col items-center justify-center">
-                        <h1 className="text-xl font-semibold">John Doe</h1>
+                        <h1 className="text-xl font-semibold">{props.ride.user.firstName} {props.ride.user.lastName}</h1>
                         <p className="text-sm text-gray-600">+92 333 444 5555</p>
                     </div>
                 </div>
@@ -31,8 +32,7 @@ function ConfirmRidePopup(props) {
             <div className="flex items-center justify-between w-full h-[15%] border-b-2 px-4">
                 <HiLocationMarker className="text-2xl text-gray-500" />
                 <div className="flex flex-col w-full pl-4">
-                    <h1 className="text-lg font-semibold">92B/CR</h1>
-                    <p className="text-sm text-gray-600">Attock, Punjab, Pakistan</p>
+                    <h1 className="text-lg font-semibold">{props.ride.pickup}</h1>
                 </div>
             </div>
 
@@ -40,8 +40,7 @@ function ConfirmRidePopup(props) {
             <div className="flex items-center justify-between w-full h-[15%] border-b-2 px-4">
                 <HiHomeModern className="text-2xl text-gray-500" />
                 <div className="flex flex-col w-full pl-4">
-                    <h1 className="text-lg font-semibold">92B/CR</h1>
-                    <p className="text-sm text-gray-600">Attock, Punjab, Pakistan</p>
+                    <h1 className="text-lg font-semibold">{props.ride.destination}</h1>
                 </div>
             </div>
 
@@ -49,7 +48,7 @@ function ConfirmRidePopup(props) {
             <div className="flex items-center justify-between w-full h-[15%] border-b-2 px-4">
                 <FaWallet className="text-2xl text-gray-500" />
                 <div className="flex flex-col w-full pl-4">
-                    <h1 className="text-lg font-semibold">Rs. 1000</h1>
+                    <h1 className="text-lg font-semibold">Rs. {props.ride.fare}</h1>
                     <p className="text-sm text-gray-600">Affordable, Cheap</p>
                 </div>
             </div>
@@ -57,7 +56,7 @@ function ConfirmRidePopup(props) {
                     <form onSubmit={submitHander}>
                         <input value={otp} onChange={(e) => setOtp(e.target.value)} type="text" className='bg-[#eee] px-6 py-2 font-mono text-lg rounded-lg w-full mt-3' placeholder='Enter OTP' />
 
-                        <Link to={"/captains-riding"} className='w-full mt-5 text-lg flex justify-center bg-green-600 text-white font-semibold p-2 rounded-lg'>Confirm</Link>
+                        <button onClick={props.confirmRideHandler} className='w-full mt-5 text-lg flex justify-center bg-green-600 text-white font-semibold p-2 rounded-lg'>Confirm</button>
                         <button onClick={
                             ()=>{props.setRidePopup(false); props.setConfirmRidePopup(false);}
                         } className='w-full mt-2 bg-red-600 text-lg text-white font-semibold p-2 rounded-lg'>Cancel</button>

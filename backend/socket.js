@@ -16,43 +16,58 @@ const initialization = (server) => {
 
 
     io.on('connection', (socket) => {
-        console.log('A user connected', socket.id);
 
-        socket.on('join',async (data) => {
-          const { userId, userType } = data;
-          console.log(data.userId)
+        socket.on('join', async (data) => {
+            const { userId, userType } = data;
 
-          if(userType === 'user'){
-            const user = await userModel.findOneAndUpdate({_id: userId}, {socketId: socket.id});
-            if(user){
-                socket.join(data.userId);
+            if (userType === 'user') {
+                const user = await userModel.findOneAndUpdate({ _id: userId }, { socketId: socket.id });
+                if (user) {
+                    socket.join(data.userId);
+                }
+            } else if (userType === 'captain') {
+                const captain = await captainModel.findOneAndUpdate({ _id: userId }, { socketId: socket.id });
+                if (captain) {
+                    socket.join(data.userId);
+                }
             }
-          } else if(userType === 'captain'){
-            const captain = await captainModel.findOneAndUpdate({_id: userId}, {socketId: socket.id});
-            if(captain){
-                socket.join(data.userId);
-            }
-          }
         });
-        
+
+        socket.on('updateCaptainLocation', async (data) => {
+            const { userId, location } = data;
+            if (!location || !location.latitude || !location.longitude) {
+                console.log('Location is not valid');
+                return;
+            }
+            const captain = await captainModel.findOneAndUpdate({ _id: userId }, {
+                location: {
+                    lat: location.latitude,
+                    lng: location.longitude
+                }
+            });
+            if (captain) {
+                socket.emit('captainLocation', captain);
+            }
+        });
+
         socket.on('disconnect', () => {
-            console.log('A user disconnected', socket.id);
+            return;
         });
     });
 
 }
 
-const sendMessage = (message, socketId) => {
-    if(io){
-        io.to(socketId).emit('message', message);
+const sendMessage = (message, socketId, type) => {
+    if (io) {
+        io.to(socketId).emit(type, message);
     } else {
         console.log('Socket is not initialized');
     }
 }
 
-const sendMessageToAll = (message) => {
-    if(io){
-        io.emit('message', message);
+const sendMessageToAll = (message, type) => {
+    if (io) {
+        io.emit(type, message);
     } else {
         console.log('Socket is not initialized');
     }

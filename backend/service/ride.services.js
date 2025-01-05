@@ -1,5 +1,6 @@
 const rideModel = require('../models/rideModel');
 const mapServices = require('./map.service');
+const { sendMessage } = require('../socket');
 
 
 const otpGenerator = async () => {
@@ -24,8 +25,8 @@ const getFare = async (origin, destination) => {
 
   const distanceInfo = await mapServices.getDistanceInfo(origin, destination);
   // Ensure the required data exists
-      const Distance = distanceInfo?.distance?.text
-      const Duration = distanceInfo?.duration?.text
+  const Distance = distanceInfo?.distance?.text
+  const Duration = distanceInfo?.duration?.text
   if (!Distance || !Duration) {
     throw new Error("Invalid distance information received from map services.");
   }
@@ -58,16 +59,14 @@ module.exports.createRide = async (pickup, destination, vehicleType, user) => {
 
   try {
     const distanceInfo = await mapServices.getDistanceInfo(pickup, destination);
-    // Ensure the required data exists
     const Distance = distanceInfo?.distance?.text;
     const Duration = distanceInfo?.duration?.text;
-    // Generate distance and duration from the distance info
     const { distance, duration } = await generateTimeAndDistance(
       Duration,
       Distance
     );
 
-    const fare = await getFare( pickup, destination);
+    const fare = await getFare(pickup, destination);
     if (!fare || fare <= 0) {
       throw new Error("Failed to calculate fare.");
     }
@@ -93,6 +92,41 @@ module.exports.createRide = async (pickup, destination, vehicleType, user) => {
     throw new Error("Failed to create ride. Please try again later.");
   }
 };
+
+module.exports.confirmRide = async (rideId, captainId) => {
+  const ride = await rideModel.findById(rideId).populate('user');
+  if (!ride) {
+    throw new Error("Ride not found");
+  }
+  ride.captain = captainId;
+  ride.status = 'accepted';
+  await ride.save();
+  const finalRide = await rideModel.findById(rideId).populate('user').populate('captain');
+
+  sendMessage(finalRide, ride.user.socketId, 'rideAccepted')
+
+  return finalRide;
+}
+
+module.exports.startRide = async (rideId, otp) => {
+  const ride = await rideModel.findById(rideId).populate('user').populate('captain');
+  if (!ride) {
+    throw new Error("Ride not found");
+  }
+  if (ride.status !== 'accepted') {
+    throw new Error("Ride not accepted");
+  }
+  if (ride.status === 'ongoing') {
+    throw new Error("Ride already started");
+  }
+  if (ride.otp !== otp) {
+    throw new Error("Invalid OTP");
+  }
+  ride.status = 'ongoing';
+  await ride.save();
+  sendMessage(ride, ride.user.socketId, 'rideStarted')
+  return ride;
+}
 
 module.exports.getFare = getFare;
 

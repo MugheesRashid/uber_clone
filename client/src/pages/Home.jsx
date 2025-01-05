@@ -30,6 +30,8 @@ function Home() {
       sendMessage('join', {userType: "user", userId: user._id})
     }
   }, [user])
+
+  
  const createRide = async () => {
   try {
     const response = await axios.post(`http://localhost:4000/ride/create-ride`, {

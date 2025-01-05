@@ -6,20 +6,68 @@ import OrderPopup from './components/OrderPopup';
 import ConfirmRidePopup from './components/ConfirmRidePopup';
 import { captainDataContext } from '../assets/context/CaptainContext';
 import { useSocket } from '../assets/context/SocketContext';
+import axios from 'axios'
+import { useNavigate } from 'react-router-dom';
 
 const CaptainHome = () => {
-  const [ridePopup, setRidePopup] = useState(true)
+  const [ridePopup, setRidePopup] = useState(false)
   const [confirmRidePopup, setConfirmRidePopup] = useState(false)
+  const [ride, setRide] = useState(null)
+
+  const navigate = useNavigate()
 
   const handleSubmit = (e) => {
     e.preventDefault()
   }
   const { captain } = useContext(captainDataContext)
-  const { sendMessage } = useSocket()
+  const { sendMessage, receiveMessage } = useSocket()
 
   useEffect(() => {
     sendMessage('join', {userType: "captain", userId: captain._id})
-  }, [captain])
+    receiveMessage('newRide', (ride) => {
+      setRidePopup(true)
+      setRide(ride)
+    })
+
+  // setInterval(() => {
+  //   navigator.geolocation.getCurrentPosition((position) => {
+  //     console.log(position)
+  //     sendMessage('updateCaptainLocation', {userId: captain._id, location: position.coords})
+  //   })
+  // }, 3000)
+  }, [captain, ridePopup])
+
+  const confirmRideHandler =async () => {
+
+    const response = await axios.post("http://localhost:4000/ride/confirm-ride",{
+      rideId: ride._id,
+      captainId: captain._id,},{
+      headers: { authorization: `Bearer ${localStorage.getItem('userToken')}` },
+    })
+    if(response.status == 200){
+      setRidePopup(false)
+      setConfirmRidePopup(true)
+    }
+    else{
+      console.log("Nahi hui Confirm")
+    }
+  }
+
+  const startRideHandler = async (otp) => {
+    const response = await axios.post("http://localhost:4000/ride/start-ride",{
+      otp: otp,
+      rideId: ride._id
+    },{
+      headers: { authorization: `Bearer ${localStorage.getItem('userToken')}` },
+    })
+
+    if(response.status == 200){
+      navigate("/captains-riding")
+    }
+    else{
+      console.log("Nahi hui Start")
+    }
+  }
 
   return (
     <>
@@ -33,8 +81,8 @@ const CaptainHome = () => {
           <img className='w-full h-full' src="" alt="" />
         </div>
         <CaptainsDetail captain={captain} />
-        {ridePopup && <OrderPopup setRidePopup={setRidePopup} setConfirmRidePopup={setConfirmRidePopup} />}
-        {confirmRidePopup && <ConfirmRidePopup setRidePopup={setRidePopup} setConfirmRidePopup={setConfirmRidePopup}  />}
+        {ridePopup && <OrderPopup setRidePopup={setRidePopup} setConfirmRidePopup={setConfirmRidePopup} ride={ride} confirmRideHandler={confirmRideHandler} />}
+        {confirmRidePopup && <ConfirmRidePopup setRidePopup={setRidePopup} setConfirmRidePopup={setConfirmRidePopup} ride={ride} startRideHandler={startRideHandler} />}
       </div>
     </>
   )
