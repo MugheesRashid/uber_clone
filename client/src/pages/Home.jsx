@@ -1,20 +1,23 @@
 import React, { useContext, useState, useEffect } from 'react'
 import { UserDataContext } from '../assets/context/UserContext'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import LocationPanel from './components/LocationPanel'
 import VehiclePanel from './components/VehiclePanel'
 import ConfirmRide from './components/ConfirmRide'
 import WaitingForRide from './components/WaitingForRide';
 import axios from 'axios'
 import { useSocket } from '../assets/context/SocketContext'
+import UserRideConfirmed from './components/UserRideConfirmed'
 
 function Home() {
   const { user, setUser } = useContext(UserDataContext)
+  const navigate = useNavigate()
   const [height, setHeight] = useState("33vh")
   const [showLocationPanel, setShowLocationPanel] = useState(true)
   const [vehiclePanel, setVehiclePanel] = useState(false)
   const [confirmRide, setConfirmRide] = useState(false)
   const [waitingForRide, setWaitingForRide] = useState(false)
+  const [userRideConfirmed, setUserRideConfirmed] = useState(false)
 
 
   const [pickup, setPickup] = useState('')
@@ -22,6 +25,7 @@ function Home() {
   const [fare, setFare] = useState("")
   const [allFare, setAllFare] = useState({})
   const [vehicleType, setVehicleType] = useState("car")
+  const [ride, setRide] = useState(null)
 
   const { sendMessage, receiveMessage } = useSocket()
 
@@ -29,7 +33,17 @@ function Home() {
     if (user && user._id) {
       sendMessage('join', {userType: "user", userId: user._id})
     }
-  }, [user])
+    receiveMessage('rideAccepted', (data) => {
+      setUserRideConfirmed(true)
+      setWaitingForRide(false)
+      setRide(data)
+    })
+
+    receiveMessage('rideStarted', (data) => {
+      setUserRideConfirmed(false)
+      navigate('/riding', {state: {ride: data}})
+    })
+  }, [user, ride, setRide])
 
   
  const createRide = async () => {
@@ -62,7 +76,8 @@ function Home() {
         {showLocationPanel && <LocationPanel setShowLocationPanel={setShowLocationPanel} setVehiclePanel={setVehiclePanel} height={height} setHeight={setHeight} pickup={pickup} destination={destination} setPickup={setPickup} setDestination={setDestination} setAllFare={setAllFare} />}
         {vehiclePanel && <VehiclePanel setShowLocationPanel={setShowLocationPanel} vehiclePanel={vehiclePanel} setVehiclePanel={setVehiclePanel} setConfirmRide={setConfirmRide} setFare={setFare} allFare={allFare} setVehicleType={setVehicleType} />}
         {confirmRide && <ConfirmRide createRide={createRide} setConfirmRide={setConfirmRide} setVehiclePanel={setVehiclePanel} setWaitingForRide={setWaitingForRide} vehicleType={vehicleType} fare={fare} pickup={pickup} destination={destination} />}
-        {waitingForRide && <WaitingForRide vehicleType={vehicleType} fare={fare} pickup={pickup} destination={destination} />}
+        {waitingForRide && <WaitingForRide vehicleType={vehicleType} fare={fare} user={user} pickup={pickup} destination={destination} />}
+        {userRideConfirmed && <UserRideConfirmed ride={ride} />}
       </div>
     </>
   )
