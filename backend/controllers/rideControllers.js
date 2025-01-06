@@ -45,6 +45,10 @@ module.exports.getFare = async (req, res) => {
 };
 
 module.exports.confirmRide = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
   try {
   const { rideId, captainId } = req.body;
   const ride = await rideService.confirmRide(rideId, captainId);
@@ -57,10 +61,32 @@ module.exports.confirmRide = async (req, res) => {
 }
 
 module.exports.startRide = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
   try {
     const { otp, rideId } = req.body;
     console.log(otp, rideId)
     const ride = await rideService.startRide(rideId, otp);
+    return res.status(200).json(ride);
+  } catch (error) {
+    console.log(error)
+    return res.status(500).json({error})
+  }
+}
+
+module.exports.finishRide = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  try {
+    const { rideId } = req.body;
+    const captain = req.user
+    const ride = await rideService.finishRide(rideId, captain);
+    sendMessage(ride, ride.user.socketId, 'rideCompleted')
     return res.status(200).json(ride);
   } catch (error) {
     console.log(error)

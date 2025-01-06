@@ -128,5 +128,26 @@ module.exports.startRide = async (rideId, otp) => {
   return ride;
 }
 
+module.exports.finishRide = async (rideId, captain) => {
+  try {
+    const ride = await rideModel.findOne({_id: rideId, captain}).populate('user').populate('captain');
+    if (!ride) {
+      throw new Error("Ride not found");
+    }
+    if (ride.status !== 'ongoing') {
+      throw new Error("Ride not ongoing");
+    }
+    if (ride.status === 'completed') {
+      throw new Error("Ride already completed");
+    }
+    ride.status = 'completed';
+    await ride.save();
+    return ride;
+  } catch (error) {
+    console.log(error)
+    throw new Error("Failed to finish ride. Please try again later.");
+  }
+}
+
 module.exports.getFare = getFare;
 

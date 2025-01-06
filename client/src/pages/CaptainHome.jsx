@@ -8,6 +8,7 @@ import { captainDataContext } from '../assets/context/CaptainContext';
 import { useSocket } from '../assets/context/SocketContext';
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom';
+import LiveTracking from './components/LiveTracking';
 
 const CaptainHome = () => {
   const [ridePopup, setRidePopup] = useState(false)
@@ -25,16 +26,17 @@ const CaptainHome = () => {
   useEffect(() => {
     sendMessage('join', {userType: "captain", userId: captain._id})
     receiveMessage('newRide', (ride) => {
+      console.log("Done")
       setRidePopup(true)
       setRide(ride)
     })
 
-  // setInterval(() => {
-  //   navigator.geolocation.getCurrentPosition((position) => {
-  //     console.log(position)
-  //     sendMessage('updateCaptainLocation', {userId: captain._id, location: position.coords})
-  //   })
-  // }, 3000)
+    // setInterval(() => {
+    //   navigator.geolocation.getCurrentPosition((position) => {
+    //     console.log(position)
+    //     sendMessage('updateCaptainLocation', {userId: captain._id, location: position.coords})
+    //   })
+    // }, 3000)
   }, [captain, ridePopup])
 
   const confirmRideHandler =async () => {
@@ -42,7 +44,7 @@ const CaptainHome = () => {
     const response = await axios.post("http://localhost:4000/ride/confirm-ride",{
       rideId: ride._id,
       captainId: captain._id,},{
-      headers: { authorization: `Bearer ${localStorage.getItem('userToken')}` },
+      headers: { authorization: `Bearer ${localStorage.getItem('token')}` },
     })
     if(response.status == 200){
       setRidePopup(false)
@@ -62,7 +64,7 @@ const CaptainHome = () => {
     })
 
     if(response.status == 200){
-      navigate("/captains-riding")
+      navigate("/captains-riding", {state: {ride: ride}})
     }
     else{
       console.log("Nahi hui Start")
@@ -77,8 +79,8 @@ const CaptainHome = () => {
           <Link to='/captains-logout' className='btn bg-zinc-300 rounded-full text-white p-2'><MdLogout className='text-2xl' /></Link>
         </div>
 
-        <div className="map w-full h-screen">
-          <img className='w-full h-full' src="" alt="" />
+        <div className="map w-full h-screen relative z-[0]">
+          <LiveTracking></LiveTracking>
         </div>
         <CaptainsDetail captain={captain} />
         {ridePopup && <OrderPopup setRidePopup={setRidePopup} setConfirmRidePopup={setConfirmRidePopup} ride={ride} confirmRideHandler={confirmRideHandler} />}

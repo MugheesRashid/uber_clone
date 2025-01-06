@@ -1,14 +1,24 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { HiLocationMarker } from "react-icons/hi";
 import { FaWallet } from "react-icons/fa";
 import { IoIosArrowDown } from 'react-icons/io';
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { useSocket } from '../assets/context/SocketContext'
 
 
 function Riding() {
     const location = useLocation()
     const ride = location.state.ride || {}
     const [height, setHeight] = useState('0')
+    const { sendMessage, receiveMessage } = useSocket()
+    const navigate = useNavigate()
+
+    useEffect(() => {
+        receiveMessage('rideCompleted', (data) => {
+            console.log(data)
+            navigate("/home")
+        })
+    }, [])
 
     const handleHeight = () =>{
        height === "0" ? setHeight("-28%") : setHeight("0")

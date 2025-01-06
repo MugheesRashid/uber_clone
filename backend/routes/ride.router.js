@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const authMiddleware = require('../middleware/auth.middleware')
-const { createRide, getFare, confirmRide, startRide } = require('../controllers/rideControllers')
+const { createRide, getFare, confirmRide, startRide, finishRide } = require('../controllers/rideControllers')
 const { body } = require('express-validator')
 
 router.post('/create-ride',
@@ -31,5 +31,11 @@ router.post('/start-ride',
     body('rideId').notEmpty().withMessage('Ride Id is required')
     ],
     authMiddleware.auth, startRide)
+
+router.post('/finish-ride',
+    [
+    body('rideId').notEmpty().withMessage('Ride Id is required')
+    ],
+    authMiddleware.auth, finishRide)
 
 module.exports = router

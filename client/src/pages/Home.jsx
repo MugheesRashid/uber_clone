@@ -8,6 +8,7 @@ import WaitingForRide from './components/WaitingForRide';
 import axios from 'axios'
 import { useSocket } from '../assets/context/SocketContext'
 import UserRideConfirmed from './components/UserRideConfirmed'
+import LiveTracking from './components/LiveTracking'
 
 function Home() {
   const { user, setUser } = useContext(UserDataContext)
@@ -31,7 +32,7 @@ function Home() {
 
   useEffect(() => {
     if (user && user._id) {
-      sendMessage('join', {userType: "user", userId: user._id})
+      sendMessage('join', { userType: "user", userId: user._id })
     }
     receiveMessage('rideAccepted', (data) => {
       setUserRideConfirmed(true)
@@ -41,26 +42,26 @@ function Home() {
 
     receiveMessage('rideStarted', (data) => {
       setUserRideConfirmed(false)
-      navigate('/riding', {state: {ride: data}})
+      navigate('/riding', { state: { ride: data } })
     })
   }, [user, ride, setRide])
 
-  
- const createRide = async () => {
-  try {
-    const response = await axios.post(`http://localhost:4000/ride/create-ride`, {
-      pickup,
-      destination,
-      vehicleType,
-    }, {
+
+  const createRide = async () => {
+    try {
+      const response = await axios.post(`http://localhost:4000/ride/create-ride`, {
+        pickup,
+        destination,
+        vehicleType,
+      }, {
         headers: { authorization: `Bearer ${localStorage.getItem('userToken')}` },
       }
-    )
-    console.log(response.data)
-  } catch (error) {
-    console.log(error)
+      )
+      console.log(response.data)
+    } catch (error) {
+      console.log(error)
+    }
   }
-}
 
   return (
     <>
@@ -70,8 +71,8 @@ function Home() {
           <Link to='/users-logout' className='btn bg-red-500 text-white p-2'>Logout</Link>
         </div>
 
-        <div className="map w-full h-screen">
-          <img className='w-full h-full' src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2_EHQBIbIu8wvGNMyDSozqbNNAkOhdLHW5Q&s" alt="" />
+        <div className="map w-full h-screen relative z-[0]">
+          <LiveTracking />
         </div>
         {showLocationPanel && <LocationPanel setShowLocationPanel={setShowLocationPanel} setVehiclePanel={setVehiclePanel} height={height} setHeight={setHeight} pickup={pickup} destination={destination} setPickup={setPickup} setDestination={setDestination} setAllFare={setAllFare} />}
         {vehiclePanel && <VehiclePanel setShowLocationPanel={setShowLocationPanel} vehiclePanel={vehiclePanel} setVehiclePanel={setVehiclePanel} setConfirmRide={setConfirmRide} setFare={setFare} allFare={allFare} setVehicleType={setVehicleType} />}
